@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Platinum Residential</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #06ea16;
+      --primary-dark: #04a610;
+      --black: #111;
+      --white: #fff;
+      --shadow: 0 8px 24px 0 rgba(6,234,22,0.08);
+      --radius: 18px;
+      --spacing: 28px;
+      --transition: 0.32s cubic-bezier(.65,0,.35,1);
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Montserrat', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 var(--spacing);
+    }
+    .calculator-container {
+      background: #151515;
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 32px 28px 28px 28px;
+      max-width: 420px;
+      width: 100%;
+      margin: 36px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 21px;
+      border: 2.5px solid var(--primary);
+      position: relative;
+    }
+    .title {
+      font-size: 1.5em;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-align: center;
+      margin-top: 12px;
+    }
+    label {
+      font-weight: 500;
+      font-size: 1.06em;
+      margin-bottom: 3px;
+      color: var(--white);
+      letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    input[type="number"] {
+      border: 1.5px solid var(--primary);
+      border-radius: 10px;
+      padding: 10px 15px;
+      font-size: 1.1em;
+      font-family: inherit;
+      color: var(--black);
+      background: var(--white);
+      outline: none;
+      width: 100%;
+      max-width: 220px;
+      transition: border .22s;
+      font-weight: 500;
+      box-sizing: border-box;
+    }
+    input[type="number"]:focus {
+      border-color: var(--primary-dark);
+      box-shadow: 0 0 0 2px #06ea1622;
+    }
+    .calc-btn {
+      background: var(--primary);
+      color: var(--black);
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1.08em;
+      font-weight: 700;
+      padding: 10px 30px;
+      cursor: pointer;
+      box-shadow: 0 2px 12px 0 #06ea1620;
+      letter-spacing: 0.5px;
+      margin-left: 12px;
+      margin-top: 8px;
+      transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+      flex-shrink: 0;
+    }
+    .calc-btn:active, .calc-btn:focus {
+      background: var(--primary-dark);
+      color: var(--white);
+    }
+    .results {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 19px;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .45s var(--transition), transform .45s var(--transition);
+    }
+    .results.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .fee-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      background: rgba(6,234,22,0.03);
+      padding: 12px 13px 11px 15px;
+      border-radius: 9px;
+      border: 1.5px solid #222;
+      position: relative;
+      transition: background .22s;
+    }
+    .fee-label {
+      font-weight: 500;
+      font-size: 1em;
+      color: var(--white);
+      letter-spacing: 0.1px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .fee-value {
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 1.17em;
+      color: var(--primary);
+      font-weight: 700;
+      margin-top: 2px;
+      letter-spacing: 0.2px;
+      transition: color .18s;
+    }
+    .tooltip {
+      position: relative;
+      cursor: pointer;
+      display: inline-block;
+      color: var(--primary);
+      font-size: 1em;
+      margin-left: 3px;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 230px;
+      background-color: var(--black);
+      color: var(--primary);
+      text-align: left;
+      border-radius: 7px;
+      border: 1.5px solid var(--primary);
+      padding: 8px 12px;
+      position: absolute;
+      z-index: 2;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity .28s;
+      font-size: 0.97em;
+      font-weight: 500;
+      pointer-events: none;
+      box-shadow: 0 3px 18px 0 #06ea1625;
+    }
+    .tooltip:hover .tooltiptext,
+    .tooltip:focus .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    @media (hover: none) {
+      .tooltip:active .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+    .net-seller {
+      background: linear-gradient(90deg, var(--primary) 0 75%, #50fc5c 100%);
+      color: var(--black) !important;
+      font-size: 1.6em;
+      font-weight: 700;
+      text-align: center;
+      padding: 30px 0 20px 0;
+      border-radius: 16px 16px 24px 24px;
+      box-shadow: 0 5px 18px 0 #06ea1630;
+      margin-top: 12px;
+      letter-spacing: 0.7px;
+      border: 3px solid var(--primary);
+      transition: box-shadow .22s, border .22s;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .net-label {
+      font-size: 1.1em;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 5px;
+      letter-spacing: 0.2px;
+    }
+    .net-amount {
+      font-size: 2.1em;
+      color: var(--black);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      margin-top: 3px;
+      margin-bottom: 0;
+      font-family: inherit;
+    }
+    @media (max-width: 600px) {
+      html, body {
+        min-height: 100vh;
+        height: auto;
+      }
+      body {
+        align-items: flex-start;
+        padding: 0;
+        font-size: 0.97em;
+      }
+      .calculator-container {
+        padding: 16px 4vw 16px 4vw;
+        max-width: 99vw;
+        min-height: 100vh;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        border-width: 0 0 3px 0;
+        gap: 15px;
+      }
+      .title { font-size: 1.13em; }
+      .fee-row {
+        padding: 10px 3vw 9px 3vw;
+        font-size: 0.97em;
+      }
+      .input-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+      }
+      .calc-btn {
+        width: 100%;
+        margin: 10px 0 0 0;
+      }
+      .net-seller {
+        padding: 14px 0 9px 0;
+        font-size: 1.09em;
+        margin-top: 8px;
+      }
+      .net-amount {
+        font-size: 1.6em;
+      }
+    }
+    @media (max-width: 400px) {
+      .calculator-container {
+        padding: 7px 1vw 7px 1vw;
+      }
+      .fee-row {
+        padding: 8px 1vw 7px 1vw;
+      }
+    }
+    .fade-in {
+      animation: fadeIn .7s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(24px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator-container fade-in">
+    <div class="title">Platinum Residential</div>
+    <form id="calcForm" autocomplete="off">
+      <div class="input-row">
+        <label for="salesPrice">
+          Sales Price (ZAR)
+        </label>
+        <input type="number" id="salesPrice" min="0" step="0.01" placeholder="Enter sales price..." required>
+        <button class="calc-btn" type="submit">Calculate</button>
+      </div>
+    </form>
+    <div class="results" id="results">
+      <div class="fee-row">
+        <span class="fee-label">
+          Lease Cession Fee (payable to the landlord)
+          <span class="tooltip" tabindex="0">&#9432;
+            <span class="tooltiptext">
+              3% of sales price plus 15% VAT.
+            </span>
+          </span>
+        </span>
+        <span class="fee-value" id="cessionFee">R 0.00</span>
+      </div>
+      <div class="fee-row">
+        <span class="fee-label">
+          Levy Stabilization Fee (payable to the HOA)
+          <span class="tooltip" tabindex="0">&#9432;
+            <span class="tooltiptext">
+              0.5% of sales price, already VAT inclusive.
+            </span>
+          </span>
+        </span>
+        <span class="fee-value" id="levyFee">R 0.00</span>
+      </div>
+      <div class="fee-row">
+        <span class="fee-label">
+          Landlord’s Portion of Agent’s Commission
+          <span class="tooltip" tabindex="0">&#9432;
+            <span class="tooltiptext">
+              1% of sales price plus 15% VAT.
+            </span>
+          </span>
+        </span>
+        <span class="fee-value" id="landlordCommission">R 0.00</span>
+      </div>
+      <div class="fee-row">
+        <span class="fee-label">
+          Agent’s Commission
+          <span class="tooltip" tabindex="0">&#9432;
+            <span class="tooltiptext">
+              4% of sales price plus 15% VAT.
+            </span>
+          </span>
+        </span>
+        <span class="fee-value" id="agentCommission">R 0.00</span>
+      </div>
+      <div class="net-seller" id="netSellerBlock">
+        <div class="net-label">Net to Seller</div>
+        <span class="net-amount" id="netToSeller">R 0.00</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    function formatCurrency(val) {
+      return "R " + val.toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    const form = document.getElementById('calcForm');
+    const salesPriceInput = document.getElementById('salesPrice');
+    const resultsDiv = document.getElementById('results');
+    const cessionFeeEl = document.getElementById('cessionFee');
+    const levyFeeEl = document.getElementById('levyFee');
+    const landlordCommissionEl = document.getElementById('landlordCommission');
+    const agentCommissionEl = document.getElementById('agentCommission');
+    const netToSellerEl = document.getElementById('netToSeller');
+    const netSellerBlock = document.getElementById('netSellerBlock');
+    function calculateAndDisplay() {
+      const P = parseFloat(salesPriceInput.value) || 0;
+      if (P <= 0) {
+        resultsDiv.classList.remove('visible');
+        return;
+      }
+      const cessionFee = P * 0.03 * 1.15;
+      const levyFee = P * 0.005;
+      const landlordCommission = P * 0.01 * 1.15;
+      const agentCommission = P * 0.04 * 1.15;
+      const netToSeller = P - (cessionFee + levyFee + landlordCommission + agentCommission);
+      cessionFeeEl.textContent = formatCurrency(cessionFee);
+      levyFeeEl.textContent = formatCurrency(levyFee);
+      landlordCommissionEl.textContent = formatCurrency(landlordCommission);
+      agentCommissionEl.textContent = formatCurrency(agentCommission);
+      netToSellerEl.textContent = formatCurrency(netToSeller);
+      resultsDiv.classList.add('visible');
+      netSellerBlock.classList.add('fade-in');
+    }
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      calculateAndDisplay();
+      if(window.innerWidth < 600) {
+        setTimeout(() => {
+          resultsDiv.scrollIntoView({behavior: 'smooth'});
+        }, 230);
+      }
+    });
+    salesPriceInput.addEventListener('input', function() {
+      calculateAndDisplay();
+    });
+    // On page load, disable results
+    resultsDiv.classList.remove('visible');
+  </script>
+</body>
+</html>
