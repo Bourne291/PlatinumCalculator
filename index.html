@@ -47,17 +47,19 @@
       position: relative;
     }
     .title {
-      font-size: 1.5em;
-      font-weight: 700;
+      font-size: 2.6em;
+      font-weight: 900;
       color: var(--primary);
-      letter-spacing: 1px;
-      margin-bottom: 12px;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
       text-align: center;
-      margin-top: 12px;
+      margin-top: 6px;
+      line-height: 1.1;
+      text-shadow: 0 2px 16px #06ea1622;
     }
     label {
       font-weight: 500;
-      font-size: 1.06em;
+      font-size: 1.12em;
       margin-bottom: 3px;
       color: var(--white);
       letter-spacing: 0.2px;
@@ -71,23 +73,45 @@
       align-items: center;
       margin-bottom: 10px;
       flex-wrap: wrap;
+      position: relative;
     }
-    input[type="number"] {
+    .input-currency-group {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 240px;
+      position: relative;
+    }
+    .currency-symbol {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--primary-dark);
+      font-size: 1.15em;
+      font-weight: 700;
+      pointer-events: none;
+      z-index: 2;
+      letter-spacing: 0.1em;
+      opacity: 0.95;
+    }
+    input[type="text"].sales-price-input {
       border: 1.5px solid var(--primary);
       border-radius: 10px;
-      padding: 10px 15px;
-      font-size: 1.1em;
+      padding: 10px 15px 10px 34px;
+      font-size: 1.15em;
       font-family: inherit;
       color: var(--black);
       background: var(--white);
       outline: none;
       width: 100%;
-      max-width: 220px;
+      max-width: 240px;
       transition: border .22s;
-      font-weight: 500;
+      font-weight: 600;
       box-sizing: border-box;
+      letter-spacing: 0.03em;
     }
-    input[type="number"]:focus {
+    input[type="text"].sales-price-input:focus {
       border-color: var(--primary-dark);
       box-shadow: 0 0 0 2px #06ea1622;
     }
@@ -97,7 +121,7 @@
       border: none;
       border-radius: 10px;
       font-family: inherit;
-      font-size: 1.08em;
+      font-size: 1.12em;
       font-weight: 700;
       padding: 10px 30px;
       cursor: pointer;
@@ -252,7 +276,7 @@
         border-width: 0 0 3px 0;
         gap: 15px;
       }
-      .title { font-size: 1.13em; }
+      .title { font-size: 2em; }
       .fee-row {
         padding: 10px 3vw 9px 3vw;
         font-size: 0.97em;
@@ -261,6 +285,9 @@
         flex-direction: column;
         align-items: stretch;
         gap: 6px;
+      }
+      .input-currency-group {
+        max-width: 100%;
       }
       .calc-btn {
         width: 100%;
@@ -300,7 +327,10 @@
         <label for="salesPrice">
           Sales Price (ZAR)
         </label>
-        <input type="number" id="salesPrice" min="0" step="0.01" placeholder="Enter sales price..." required>
+        <div class="input-currency-group">
+          <span class="currency-symbol">R</span>
+          <input type="text" id="salesPrice" class="sales-price-input" inputmode="numeric" pattern="[0-9, ]*" placeholder="0" autocomplete="off" required>
+        </div>
         <button class="calc-btn" type="submit">Calculate</button>
       </div>
     </form>
@@ -359,6 +389,15 @@
     function formatCurrency(val) {
       return "R " + val.toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
+
+    function formatInputNumber(val) {
+      // Remove anything that's not a digit
+      let number = val.replace(/[^\d]/g, "");
+      if (!number) return "";
+      return Number(number).toLocaleString("en-ZA");
+    }
+
+    // Get DOM elements
     const form = document.getElementById('calcForm');
     const salesPriceInput = document.getElementById('salesPrice');
     const resultsDiv = document.getElementById('results');
@@ -368,8 +407,52 @@
     const agentCommissionEl = document.getElementById('agentCommission');
     const netToSellerEl = document.getElementById('netToSeller');
     const netSellerBlock = document.getElementById('netSellerBlock');
+
+    // Format input as you type
+    salesPriceInput.addEventListener('input', function(e) {
+      let caretPos = salesPriceInput.selectionStart;
+      let oldValue = salesPriceInput.value;
+      let formatted = formatInputNumber(salesPriceInput.value);
+      salesPriceInput.value = formatted;
+
+      // Try to keep caret position correct (for mobile, browser differences)
+      let diff = formatted.length - oldValue.length;
+      salesPriceInput.setSelectionRange(caretPos + diff, caretPos + diff);
+
+      calculateAndDisplay();
+    });
+
+    // Prevent non-numeric keys except navigation and delete
+    salesPriceInput.addEventListener('keydown', function(e) {
+      // Allow: backspace, delete, tab, escape, enter, arrows, home, end
+      if ([46, 8, 9, 27, 13, 110, 190].indexOf(e.keyCode) !== -1 ||
+          // Allow: Ctrl/cmd+A
+          (e.keyCode === 65 && (e.ctrlKey || e.metaKey)) ||
+          // Allow: Ctrl/cmd+C
+          (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) ||
+          // Allow: Ctrl/cmd+V
+          (e.keyCode === 86 && (e.ctrlKey || e.metaKey)) ||
+          // Allow: Ctrl/cmd+X
+          (e.keyCode === 88 && (e.ctrlKey || e.metaKey)) ||
+          // Allow: home, end, left, right
+          (e.keyCode >= 35 && e.keyCode <= 39)) {
+        return;
+      }
+      // Prevent: anything not a number
+      if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) &&
+          (e.keyCode < 96 || e.keyCode > 105)) {
+        e.preventDefault();
+      }
+    });
+
+    function getSalesPriceValue() {
+      // Remove all spaces and commas for parse
+      let val = salesPriceInput.value.replace(/[^\d]/g, '');
+      return parseFloat(val) || 0;
+    }
+
     function calculateAndDisplay() {
-      const P = parseFloat(salesPriceInput.value) || 0;
+      const P = getSalesPriceValue();
       if (P <= 0) {
         resultsDiv.classList.remove('visible');
         return;
@@ -387,6 +470,7 @@
       resultsDiv.classList.add('visible');
       netSellerBlock.classList.add('fade-in');
     }
+
     form.addEventListener('submit', function(e) {
       e.preventDefault();
       calculateAndDisplay();
@@ -396,9 +480,7 @@
         }, 230);
       }
     });
-    salesPriceInput.addEventListener('input', function() {
-      calculateAndDisplay();
-    });
+
     // On page load, disable results
     resultsDiv.classList.remove('visible');
   </script>
